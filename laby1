@@ -1,0 +1,136 @@
+#include <iostream>
+
+using namespace std;
+
+const int MAX_OSOB=3;
+
+void wpiszRekord(string *nazwiska, string nazw, int *indeksy, int nrIndeksu, string *imiona, string im, int i)
+{
+    nazwiska[i]=nazw;
+    indeksy[i]=nrIndeksu;
+    imiona[i]=im;
+}
+
+bool zaznaczObecnosc(string *nazwiska, bool *obecnosci, string nazw, bool stan)
+{
+    for(int i=0;i<MAX_OSOB;++i){
+        if(nazwiska[i]==nazw){
+            obecnosci[i]=stan;
+        }
+    }
+    return stan;
+}
+
+void pokazBaze(string *nazwiska, bool *obecnosci, int *indeksy, string *imiona)
+{
+    for(int i=0;i<MAX_OSOB;++i){
+        if(nazwiska[i]!=""){
+            cout<<indeksy[i]<<" | "<<imiona[i]<<" | "<<nazwiska[i]<<" | "<<obecnosci[i]<<"\n";
+        }
+    }
+}
+
+void modyfikuj(string *nazwiska, int *indeksy, string *imiona, bool *obecnosci, string szukane)
+{
+    for(int i=0;i<MAX_OSOB;++i){
+        if(nazwiska[i]==szukane){
+            cout<<"-- Nowe dane --\n";
+            cout<<"Indeks: "; cin>>indeksy[i];
+            cout<<"Imie: "; cin>>imiona[i];
+            cout<<"Nazwisko: "; cin>>nazwiska[i];
+            cout<<"Obecnosc (1-obecny, 0-nieobecny): "; cin>>obecnosci[i];
+            return;
+        }
+    }
+    cout<<"Blad: brak nazwiska w bazie!\n";
+}
+
+void usunWpis(string *nazwiska, int *indeksy, string *imiona, bool *obecnosci, string szukane)
+{
+    for(int i=0;i<MAX_OSOB;++i){
+        if(nazwiska[i]==szukane){
+            for(int j=i;j<MAX_OSOB-1;++j){
+                indeksy[j]=indeksy[j+1];
+                imiona[j]=imiona[j+1];
+                nazwiska[j]=nazwiska[j+1];
+                obecnosci[j]=obecnosci[j+1];
+            }
+            indeksy[MAX_OSOB-1]=0;
+            imiona[MAX_OSOB-1]="";
+            nazwiska[MAX_OSOB-1]="";
+            obecnosci[MAX_OSOB-1]=0;
+            
+            cout<<"Usunieto wpis: "<<szukane<<"\n";
+            return;
+        }
+    }
+    cout<<"Blad: brak nazwiska w bazie!\n";
+}
+
+int main()
+{
+    int indeksy[MAX_OSOB]={0};
+    int tymczasowyIndeks;
+   
+    string imiona[MAX_OSOB]={""};
+    string tymczasoweImie;
+   
+    string nazwiska[MAX_OSOB]={""};
+    string tymczasoweNazwisko;
+   
+    bool obecnosci[MAX_OSOB]={0};
+    bool czyObecny;
+    
+    bool dziala=true;
+    int akcja;
+    string cel;
+    
+    cout<<"--- BAZA DANYCH ---\n";
+    
+    while(dziala){
+        cout<<"\nMenu: 1-Dodaj, 2-Edytuj, 3-Usun, 4-Zakoncz\nWybor: ";
+        cin>>akcja;
+        
+        switch(akcja){
+            case 1:
+                for(int i=0;i<MAX_OSOB;++i){
+                    cout<<"--- Osoba "<<i+1<<" ---\n";
+                    cout<<"Indeks: "; cin>>tymczasowyIndeks;
+                    cout<<"Imie: "; cin>>tymczasoweImie;
+                    cout<<"Nazwisko: "; cin>>tymczasoweNazwisko;
+                    wpiszRekord(nazwiska, tymczasoweNazwisko, indeksy, tymczasowyIndeks, imiona, tymczasoweImie, i);
+        
+                    cout<<"Obecnosc (1/0): "; cin>>czyObecny;
+                    zaznaczObecnosc(nazwiska, obecnosci, tymczasoweNazwisko, czyObecny);
+                }
+                cout<<"\nAktualny stan:\n";
+                pokazBaze(nazwiska, obecnosci, indeksy, imiona);
+                break;
+                
+            case 2:
+                cout<<"Kogo edytowac (nazwisko)? "; cin>>cel;
+                modyfikuj(nazwiska, indeksy, imiona, obecnosci, cel);
+                cout<<"\nAktualny stan:\n";
+                pokazBaze(nazwiska, obecnosci, indeksy, imiona);
+                break;
+                
+            case 3:
+                cout<<"Kogo usunac (nazwisko)? "; cin>>cel;
+                usunWpis(nazwiska, indeksy, imiona, obecnosci, cel);
+                cout<<"\nAktualny stan:\n";
+                pokazBaze(nazwiska, obecnosci, indeksy, imiona);
+                break;
+                
+            case 4: 
+                cout<<"Koniec pracy.\n";
+                dziala=false;
+                break;
+                
+            default:
+                cout<<"Nieprawidlowa opcja!\n";
+                break;
+        }
+    }
+    
+    return 0;
+}
