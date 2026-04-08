@@ -1,0 +1,193 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+const int MAX_OSOB = 3;
+
+// --- DEFINICJA KLASY ZGODNA Z TABLICĄ ---
+class Osoba {
+private:
+    string imie;
+    string nazwisko;
+    int nrIndeksu;
+    bool obecnosc;
+
+public:
+    // Konstruktor ustawiający domyślne, puste wartości
+    Osoba() {
+        imie = "";
+        nazwisko = "";
+        nrIndeksu = 0;
+        obecnosc = false;
+    }
+
+    // --- GETTERY (pobieranie wartości) ---
+    string getImie() { return imie; }
+    string getNazwisko() { return nazwisko; }
+    int getIndeks() { return nrIndeksu; }
+    bool getObecnosc() { return obecnosc; }
+
+    // --- SETTERY (ustawianie wartości z walidacją, jak na zdjęciu) ---
+    int setImie(string wartosc) {
+        if (wartosc.length() < 2) {
+            return -1; // Kod błędu: Imię za krótkie
+        }
+        imie = wartosc;
+        return 0;      // Sukces
+    }
+
+    int setNazwisko(string wartosc) {
+        if (wartosc.length() < 2) {
+            return -1; // Kod błędu: Nazwisko za krótkie
+        }
+        nazwisko = wartosc;
+        return 0;      // Sukces
+    }
+
+    void setIndeks(int wartosc) {
+        nrIndeksu = wartosc;
+    }
+
+    void setObecnosc(bool wartosc) {
+        obecnosc = wartosc;
+    }
+};
+
+// --- FUNKCJE OPERUJĄCE NA BAZIE OBIEKTÓW ---
+
+void pokazBaze(Osoba baza[]) {
+    for (int i = 0; i < MAX_OSOB; ++i) {
+        if (baza[i].getNazwisko() != "") {
+            cout << baza[i].getIndeks() << " | "
+                 << baza[i].getImie() << " | "
+                 << baza[i].getNazwisko() << " | "
+                 << baza[i].getObecnosc() << "\n";
+        }
+    }
+}
+
+void modyfikuj(Osoba baza[], string szukane) {
+    for (int i = 0; i < MAX_OSOB; ++i) {
+        if (baza[i].getNazwisko() == szukane) {
+            string tempString;
+            int tempInt;
+            bool tempBool;
+
+            cout << "-- Nowe dane --\n";
+            cout << "Indeks: "; cin >> tempInt;
+            baza[i].setIndeks(tempInt);
+
+            cout << "Imie: "; cin >> tempString;
+            while (baza[i].setImie(tempString) == -1) {
+                cout << "Blad! Imie musi miec co najmniej 2 znaki. Podaj ponownie: ";
+                cin >> tempString;
+            }
+
+            cout << "Nazwisko: "; cin >> tempString;
+            while (baza[i].setNazwisko(tempString) == -1) {
+                cout << "Blad! Nazwisko musi miec co najmniej 2 znaki. Podaj ponownie: ";
+                cin >> tempString;
+            }
+
+            cout << "Obecnosc (1-obecny, 0-nieobecny): "; cin >> tempBool;
+            baza[i].setObecnosc(tempBool);
+
+            cout << "Zaktualizowano dane!\n";
+            return;
+        }
+    }
+    cout << "Blad: brak nazwiska w bazie!\n";
+}
+
+void usunWpis(Osoba baza[], string szukane) {
+    for (int i = 0; i < MAX_OSOB; ++i) {
+        if (baza[i].getNazwisko() == szukane) {
+            // Przesuwanie elementów, aby zapchać "dziurę"
+            for (int j = i; j < MAX_OSOB - 1; ++j) {
+                baza[j] = baza[j + 1]; 
+            }
+            // "Czyszczenie" ostatniego elementu nadpisując go pustym obiektem
+            baza[MAX_OSOB - 1] = Osoba();
+            
+            cout << "Usunieto wpis: " << szukane << "\n";
+            return;
+        }
+    }
+    cout << "Blad: brak nazwiska w bazie!\n";
+}
+
+// --- GŁÓWNA PĘTLA PROGRAMU ---
+
+int main() {
+    Osoba baza[MAX_OSOB]; // Tworzymy tablicę obiektów zamiast 4 różnych tablic
+    
+    bool dziala = true;
+    int akcja;
+    string cel;
+
+    cout << "--- BAZA DANYCH ---\n";
+
+    while (dziala) {
+        cout << "\nMenu: 1-Dodaj/Nadpisz wszystkich, 2-Edytuj, 3-Usun, 4-Zakoncz\nWybor: ";
+        cin >> akcja;
+
+        switch (akcja) {
+            case 1:
+                for (int i = 0; i < MAX_OSOB; ++i) {
+                    string tempString;
+                    int tempInt;
+                    bool tempBool;
+
+                    cout << "--- Osoba " << i + 1 << " ---\n";
+                    
+                    cout << "Indeks: "; cin >> tempInt;
+                    baza[i].setIndeks(tempInt);
+
+                    cout << "Imie: "; cin >> tempString;
+                    // Walidacja w oparciu o metodę klasy zwracającą -1
+                    while (baza[i].setImie(tempString) == -1) {
+                        cout << "Blad! Imie musi miec co najmniej 2 znaki. Podaj ponownie: ";
+                        cin >> tempString;
+                    }
+
+                    cout << "Nazwisko: "; cin >> tempString;
+                    while (baza[i].setNazwisko(tempString) == -1) {
+                        cout << "Blad! Nazwisko musi miec co najmniej 2 znaki. Podaj ponownie: ";
+                        cin >> tempString;
+                    }
+
+                    cout << "Obecnosc (1/0): "; cin >> tempBool;
+                    baza[i].setObecnosc(tempBool);
+                }
+                cout << "\nAktualny stan:\n";
+                pokazBaze(baza);
+                break;
+
+            case 2:
+                cout << "Kogo edytowac (nazwisko)? "; cin >> cel;
+                modyfikuj(baza, cel);
+                cout << "\nAktualny stan:\n";
+                pokazBaze(baza);
+                break;
+
+            case 3:
+                cout << "Kogo usunac (nazwisko)? "; cin >> cel;
+                usunWpis(baza, cel);
+                cout << "\nAktualny stan:\n";
+                pokazBaze(baza);
+                break;
+
+            case 4: 
+                cout << "Koniec pracy.\n";
+                dziala = false;
+                break;
+
+            default:
+                cout << "Nieprawidlowa opcja!\n";
+                break;
+        }
+    }
+
+    return 0;
+}
