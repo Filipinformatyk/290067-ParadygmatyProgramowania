@@ -1,0 +1,385 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+const int MAX_OSOB = 10;
+const int MAX_LIST = 2;
+
+class Osoba {
+protected:
+    string imie;
+    string nazwisko;
+    int nrIndeksu;
+
+public:
+    Osoba(int startowy_indeks = 0, string startowe_imie = "", string startowe_nazwisko = "") {
+        imie = startowe_imie;
+        nazwisko = startowe_nazwisko;
+        nrIndeksu = startowy_indeks;
+    }
+
+    virtual ~Osoba() {}
+
+    string getImie() { return imie; }
+    string getNazwisko() { return nazwisko; }
+    int getIndeks() { return nrIndeksu; }
+
+    int setImie(string wartosc) {
+        if (wartosc.length() < 2) return -1;
+        imie = wartosc;
+        return 0;
+    }
+
+    int setNazwisko(string wartosc) {
+        if (wartosc.length() < 2) return -1;
+        nazwisko = wartosc;
+        return 0;
+    }
+
+    void setIndeks(int wartosc) { nrIndeksu = wartosc; }
+
+    virtual void wyswietl_info() {
+        cout << nrIndeksu << " | " << imie << " | " << nazwisko;
+    }
+};
+
+class Student : public Osoba {
+protected:
+    string kierunek;
+    int semestr;
+public:
+    Student(int inx = 0, string im = "", string naz = "", string kier = "", int sem = 0)
+        : Osoba(inx, im, naz), kierunek(kier), semestr(sem) {}
+
+    void setKierunek(string nowy_kierunek) { kierunek = nowy_kierunek; }
+    void setSemestr(int nowy_sem) { semestr = nowy_sem; }
+
+    void wyswietl_info() override {
+        cout << "[STUDENT] " << nrIndeksu << " | " << imie << " | " << nazwisko 
+             << " | " << kierunek << " (sem: " << semestr << ")";
+    }
+};
+
+class StudentZaoczny : public Student {
+public:
+    StudentZaoczny(int inx = 0, string im = "", string naz = "", string kier = "", int sem = 0)
+        : Student(inx, im, naz, kier, sem) {}
+
+    void wyswietl_info() override {
+        cout << "[ZAOCZNY] " << nrIndeksu << " | " << imie << " | " << nazwisko 
+             << " | " << kierunek << " (sem: " << semestr << ")";
+    }
+};
+
+class Prowadzacy : public Osoba {
+protected:
+    string tytul_naukowy;
+    string przedmiot;
+public:
+    Prowadzacy(int inx = 0, string im = "", string naz = "", string tytul = "", string przedm = "")
+        : Osoba(inx, im, naz), tytul_naukowy(tytul), przedmiot(przedm) {}
+
+    void setTytul(string nowy_tytul) { tytul_naukowy = nowy_tytul; }
+    void setPrzedmiot(string nowy_przedmiot) { przedmiot = nowy_przedmiot; }
+
+    void wyswietl_info() override {
+        cout << "[PROWADZACY] " << nrIndeksu << " | " << tytul_naukowy << " " 
+             << imie << " " << nazwisko << " | " << przedmiot;
+    }
+};
+
+
+class ListaObecnosci {
+private:
+    string nazwaListy;
+    
+    struct WpisListy {
+        Osoba* osoba = nullptr;
+        bool obecnosc = false;
+    };
+    
+    WpisListy tabOsob[MAX_OSOB];
+
+    int znajdzPuste() {
+        for (int i = 0; i < MAX_OSOB; i++) {
+            if (tabOsob[i].osoba == nullptr) return i;
+        }
+        return -1;
+    }
+
+public:
+    ListaObecnosci() {
+        nazwaListy = "Nieznana";
+    }
+
+    void setNazwa(string nazwa) { nazwaListy = nazwa; }
+    string getNazwa() { return nazwaListy; }
+
+    void dodajDoListy(Osoba* nowa) {
+        for (int i = 0; i < MAX_OSOB; i++) {
+            if (tabOsob[i].osoba == nowa) {
+                cout << "Ta osoba juz jest na tej liscie!\n";
+                return;
+            }
+        }
+
+        int i = znajdzPuste();
+        if (i != -1) {
+            tabOsob[i].osoba = nowa;
+            tabOsob[i].obecnosc = false;
+            cout << "Dodano do listy: " << nazwaListy << "\n";
+        } else {
+            cout << "Lista jest pelna!\n";
+        }
+    }
+
+    void usunZListy(string nazwisko) {
+        for (int i = 0; i < MAX_OSOB; i++) {
+            if (tabOsob[i].osoba != nullptr && tabOsob[i].osoba->getNazwisko() == nazwisko) {
+                tabOsob[i].osoba = nullptr;
+                tabOsob[i].obecnosc = false;
+            }
+        }
+    }
+
+    void drukuj() {
+        cout << "\n--- LISTA: " << nazwaListy << " ---\n";
+        bool ktos_jest = false;
+        for (int i = 0; i < MAX_OSOB; i++) {
+            if (tabOsob[i].osoba != nullptr) {
+                ktos_jest = true;
+                tabOsob[i].osoba->wyswietl_info(); 
+                cout << " | Obecnosc: " << (tabOsob[i].obecnosc ? "Tak" : "Nie") << endl;
+            }
+        }
+        if (!ktos_jest) cout << "Lista jest pusta.\n";
+    }
+
+    void zmienObecnosc(string nazwisko, bool stan) {
+        for (int i = 0; i < MAX_OSOB; i++) {
+            if (tabOsob[i].osoba != nullptr && tabOsob[i].osoba->getNazwisko() == nazwisko) {
+                tabOsob[i].obecnosc = stan;
+                cout << "Obecnosc zaktualizowana.\n";
+                return;
+            }
+        }
+        cout << "Nie znaleziono osoby o tym nazwisku na tej liscie.\n";
+    }
+};
+
+
+class InterfejsUzytkownika {
+private:
+    Osoba* bazaOsob[MAX_OSOB]; 
+    ListaObecnosci tablicaList[MAX_LIST];
+
+    int znajdzWolneWBazie() {
+        for (int i = 0; i < MAX_OSOB; i++) {
+            if (bazaOsob[i] == nullptr) return i;
+        }
+        return -1;
+    }
+
+    int znajdzOsobeIndex(string nazwisko) {
+        for (int i = 0; i < MAX_OSOB; i++) {
+            if (bazaOsob[i] != nullptr && bazaOsob[i]->getNazwisko() == nazwisko) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+public:
+    InterfejsUzytkownika() {
+      
+        for(int i = 0; i < MAX_OSOB; i++) {
+            bazaOsob[i] = nullptr;
+        }
+        tablicaList[0].setNazwa("Wyklad 1");
+        tablicaList[1].setNazwa("Cwiczenia");
+    }
+
+    ~InterfejsUzytkownika() {
+
+        for(int i = 0; i < MAX_OSOB; i++) {
+            if (bazaOsob[i] != nullptr) {
+                delete bazaOsob[i];
+            }
+        }
+    }
+
+    void utworzOsobe() {
+        int i = znajdzWolneWBazie();
+        if (i == -1) {
+            cout << "Baza osob jest pelna!\n";
+            return;
+        }
+
+        int typ, tInt;
+        string tImie, tNazwisko, tKierunek, tTytul, tPrzedmiot;
+        int tSemestr;
+
+        cout << "Wybierz typ (1-Zwykla osoba, 2-Student, 3-Student Zaoczny, 4-Prowadzacy): ";
+        cin >> typ;
+
+        cout << "Podaj indeks: "; cin >> tInt;
+        cout << "Podaj imie: "; cin >> tImie;
+        cout << "Podaj nazwisko: "; cin >> tNazwisko;
+
+        switch(typ) {
+            case 1:
+                bazaOsob[i] = new Osoba(tInt, tImie, tNazwisko);
+                break;
+            case 2:
+                cout << "Podaj kierunek: "; cin >> tKierunek;
+                cout << "Podaj semestr: "; cin >> tSemestr;
+                bazaOsob[i] = new Student(tInt, tImie, tNazwisko, tKierunek, tSemestr);
+                break;
+            case 3:
+                cout << "Podaj kierunek: "; cin >> tKierunek;
+                cout << "Podaj semestr: "; cin >> tSemestr;
+                bazaOsob[i] = new StudentZaoczny(tInt, tImie, tNazwisko, tKierunek, tSemestr);
+                break;
+            case 4:
+                cout << "Podaj tytul naukowy: "; cin >> tTytul;
+                cout << "Podaj przedmiot: "; cin >> tPrzedmiot;
+                bazaOsob[i] = new Prowadzacy(tInt, tImie, tNazwisko, tTytul, tPrzedmiot);
+                break;
+            default:
+                cout << "Nieznany typ, tworze zwykla osobe.\n";
+                bazaOsob[i] = new Osoba(tInt, tImie, tNazwisko);
+                break;
+        }
+        cout << "Utworzono osobe w bazie.\n";
+    }
+
+    void przypiszDoListy() {
+        string nazwisko;
+        int nrListy;
+        cout << "Podaj nazwisko osoby z bazy: "; cin >> nazwisko;
+        
+        int idOsoby = znajdzOsobeIndex(nazwisko);
+        if (idOsoby == -1) {
+            cout << "Nie ma takiej osoby w bazie.\n";
+            return;
+        }
+
+        cout << "Do ktorej listy dodac?\n";
+        for (int l = 0; l < MAX_LIST; l++) {
+            cout << l << ". " << tablicaList[l].getNazwa() << "\n";
+        }
+        cout << "Wybor: "; cin >> nrListy;
+
+        if (nrListy >= 0 && nrListy < MAX_LIST) {
+            tablicaList[nrListy].dodajDoListy(bazaOsob[idOsoby]);
+        } else {
+            cout << "Zly numer listy.\n";
+        }
+    }
+
+    void edytujOsobe() {
+        string nazwisko;
+        cout << "Podaj nazwisko osoby do edycji: "; cin >> nazwisko;
+        int id = znajdzOsobeIndex(nazwisko);
+        
+        if (id != -1) {
+            int nowy_indeks;
+            string nowe_imie, nowe_nazwisko;
+            cout << "Podaj nowy indeks: "; cin >> nowy_indeks;
+            cout << "Podaj nowe imie: "; cin >> nowe_imie;
+            cout << "Podaj nowe nazwisko: "; cin >> nowe_nazwisko;
+            
+            bazaOsob[id]->setIndeks(nowy_indeks);
+            bazaOsob[id]->setImie(nowe_imie);
+            bazaOsob[id]->setNazwisko(nowe_nazwisko);
+            cout << "Zaktualizowano dane.\n";
+        } else {
+            cout << "Nie znaleziono takiego nazwiska!\n";
+        }
+    }
+
+    void usunOsobe() {
+        string nazwisko;
+        cout << "Podaj nazwisko osoby do usuniecia z bazy: "; cin >> nazwisko;
+        int id = znajdzOsobeIndex(nazwisko);
+
+        if (id != -1) {
+            for(int l = 0; l < MAX_LIST; l++) {
+                tablicaList[l].usunZListy(nazwisko);
+            }
+            delete bazaOsob[id];
+            bazaOsob[id] = nullptr;
+            cout << "Osoba usunieta.\n";
+        } else {
+            cout << "Nie ma kogo usunac, brak nazwiska w bazie.\n";
+        }
+    }
+
+    void menu() {
+        int wybor;
+        while (true) {
+            cout << "\n=== SYSTEM OBECNOSCI ===\n";
+            cout << "1. Utworz nowa osobe w bazie\n";
+            cout << "2. Dodaj osobe z bazy do listy\n";
+            cout << "3. Ustaw obecnosc na liscie\n";
+            cout << "4. Wyswietl liste\n";
+            cout << "5. Edytuj dane osoby\n";
+            cout << "6. Usun osobe z bazy\n";
+            cout << "7. Wczytaj zestaw testowy (z kodu kolegi)\n";
+            cout << "0. Wyjscie\n";
+            cout << "Wybor: "; cin >> wybor;
+
+            switch (wybor) {
+                case 1: utworzOsobe(); break;
+                case 2: przypiszDoListy(); break;
+                case 3: {
+                    string naz; bool ob; int nr;
+                    for (int l = 0; l < MAX_LIST; l++) {
+                        cout << l << ". " << tablicaList[l].getNazwa() << "\n";
+                    }
+                    cout << "Nr listy: "; cin >> nr;
+                    if (nr >= 0 && nr < MAX_LIST) {
+                        cout << "Nazwisko: "; cin >> naz;
+                        cout << "Obecny (1/0): "; cin >> ob;
+                        tablicaList[nr].zmienObecnosc(naz, ob);
+                    } else {
+                        cout << "Zly numer listy.\n";
+                    }
+                    break;
+                }
+                case 4: {
+                    int nr;
+                    for (int l = 0; l < MAX_LIST; l++) {
+                        cout << l << ". " << tablicaList[l].getNazwa() << "\n";
+                    }
+                    cout << "Ktora liste wyswietlic: "; cin >> nr;
+                    if (nr >= 0 && nr < MAX_LIST) {
+                        tablicaList[nr].drukuj();
+                    } else {
+                        cout << "Zly numer listy.\n";
+                    }
+                    break;
+                }
+                case 5: edytujOsobe(); break;
+                case 6: usunOsobe(); break;
+                case 7: {
+                    if (znajdzWolneWBazie() != -1) bazaOsob[znajdzWolneWBazie()] = new Osoba(1, "Jan", "Kowalski");
+                    if (znajdzWolneWBazie() != -1) bazaOsob[znajdzWolneWBazie()] = new Student(2, "Anna", "Nowak", "Informatyka", 3);
+                    if (znajdzWolneWBazie() != -1) bazaOsob[znajdzWolneWBazie()] = new Prowadzacy(3, "Piotr", "Wisniewski", "Dr", "Programowanie");
+                    if (znajdzWolneWBazie() != -1) bazaOsob[znajdzWolneWBazie()] = new StudentZaoczny(4, "Michal", "Zalewski", "Zarzadzanie", 5);
+                    cout << "Wczytano zestaw testowy (rozne typy obiektow).\n";
+                    break;
+                }
+                case 0: return;
+                default: cout << "Zly wybor!\n";
+            }
+        }
+    }
+};
+
+int main() {
+    InterfejsUzytkownika ui;
+    ui.menu();
+    return 0;
+}
