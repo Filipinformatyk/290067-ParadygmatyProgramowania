@@ -1,0 +1,394 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+const int MAX_OSOB = 10;
+const int MAX_LIST = 2;
+
+class Przedstawialny {
+public:
+    virtual string przedstawSie() const = 0;
+    virtual ~Przedstawialny() {}
+};
+
+class Drukarka {
+public:
+    static void drukuj(const Przedstawialny& obj) {
+        cout << obj.przedstawSie();
+    }
+};
+
+class Osoba : public Przedstawialny {
+protected:
+    int indeks;
+    string imie;
+    string nazwisko;
+    string data_urodzenia;
+    float wzrost;
+
+public:
+    Osoba(int startowy_indeks = 0, string startowe_imie = "", string startowe_nazwisko = "", string data_ur = "Brak", float wzr = 0.0f) {
+        indeks = startowy_indeks;
+        imie = startowe_imie;
+        nazwisko = startowe_nazwisko;
+        data_urodzenia = data_ur;
+        wzrost = wzr;
+    }
+
+    virtual ~Osoba() {}
+
+    virtual void ustaw() {
+        cout << "Indeks: "; cin >> indeks;
+        cout << "Imie: "; cin >> imie;
+        cout << "Nazwisko: "; cin >> nazwisko;
+        cout << "Data urodzenia: "; cin >> data_urodzenia;
+        cout << "Wzrost: "; cin >> wzrost;
+    }
+
+    virtual void edytuj() {
+        cout << "Nowy indeks: "; cin >> indeks;
+        cout << "Nowe imie: "; cin >> imie;
+        cout << "Nowe nazwisko: "; cin >> nazwisko;
+        cout << "Nowa data urodzenia: "; cin >> data_urodzenia;
+        cout << "Nowy wzrost: "; cin >> wzrost;
+    }
+
+    string getNazwisko() const { return nazwisko; }
+
+    string przedstawSie() const override {
+        string s = "[OSOBA] " + to_string(indeks) + " - " + imie + " " + nazwisko + "\n";
+        s += "   Data ur.: " + data_urodzenia + " | Wzrost: " + to_string(wzrost) + " cm\n";
+        return s;
+    }
+};
+
+class Student : public Osoba {
+protected:
+    string kierunek;
+    int semestr;
+public:
+    Student(int inx = 0, string im = "", string naz = "", string kier = "", int sem = 0, string data_ur = "Brak", float wzr = 0.0f) 
+        : Osoba(inx, im, naz, data_ur, wzr), kierunek(kier), semestr(sem) {}
+
+    void ustaw() override {
+        Osoba::ustaw();
+        cout << "Kierunek: "; cin >> kierunek;
+        cout << "Semestr: "; cin >> semestr;
+    }
+
+    void edytuj() override {
+        Osoba::edytuj();
+        cout << "Nowy kierunek: "; cin >> kierunek;
+        cout << "Nowy semestr: "; cin >> semestr;
+    }
+
+    string przedstawSie() const override {
+        string s = "[STUDENT] " + to_string(indeks) + " - " + imie + " " + nazwisko + " (" + kierunek + ", sem: " + to_string(semestr) + ")\n";
+        s += "   Data ur.: " + data_urodzenia + " | Wzrost: " + to_string(wzrost) + " cm\n";
+        return s;
+    }
+};
+
+class StudentZaoczny : public Student {
+public:
+    StudentZaoczny(int inx = 0, string im = "", string naz = "", string kier = "", int sem = 0, string data_ur = "Brak", float wzr = 0.0f) 
+        : Student(inx, im, naz, kier, sem, data_ur, wzr) {}
+
+    string przedstawSie() const override {
+        string s = "[ZAOCZNY] " + to_string(indeks) + " - " + imie + " " + nazwisko + " (" + kierunek + ", sem: " + to_string(semestr) + ")\n";
+        s += "   Data ur.: " + data_urodzenia + " | Wzrost: " + to_string(wzrost) + " cm\n";
+        return s;
+    }
+};
+
+class Prowadzacy : public Osoba {
+protected:
+    string tytul_naukowy;
+    string przedmiot;
+public:
+    Prowadzacy(int inx = 0, string im = "", string naz = "", string tytul = "", string przedm = "", string data_ur = "Brak", float wzr = 0.0f)
+        : Osoba(inx, im, naz, data_ur, wzr), tytul_naukowy(tytul), przedmiot(przedm) {}
+
+    void ustaw() override {
+        Osoba::ustaw();
+        cout << "Tytul naukowy: "; cin >> tytul_naukowy;
+        cout << "Przedmiot: "; cin >> przedmiot;
+    }
+
+    void edytuj() override {
+        Osoba::edytuj();
+        cout << "Nowy tytul naukowy: "; cin >> tytul_naukowy;
+        cout << "Nowy przedmiot: "; cin >> przedmiot;
+    }
+
+    string przedstawSie() const override {
+        string s = "[PROWADZACY] " + to_string(indeks) + " - " + tytul_naukowy + " " + imie + " " + nazwisko + " (Przedmiot: " + przedmiot + ")\n";
+        s += "   Data ur.: " + data_urodzenia + " | Wzrost: " + to_string(wzrost) + " cm\n";
+        return s;
+    }
+};
+
+class ListaObecnosci {
+private:
+    string nazwaListy;
+    
+    struct WpisListy {
+        Osoba* osoba = nullptr;
+        bool obecnosc = false;
+    };
+    
+    WpisListy tabOsob[MAX_OSOB];
+
+    int znajdzPuste() {
+        for (int i = 0; i < MAX_OSOB; i++) {
+            if (tabOsob[i].osoba == nullptr) return i;
+        }
+        return -1;
+    }
+
+public:
+    ListaObecnosci() {
+        nazwaListy = "Nieznana";
+    }
+
+    void setNazwa(string nazwa) { nazwaListy = nazwa; }
+    string getNazwa() { return nazwaListy; }
+
+    void dodajDoListy(Osoba* nowa) {
+        for (int i = 0; i < MAX_OSOB; i++) {
+            if (tabOsob[i].osoba == nowa) {
+                cout << "Ta osoba juz jest na tej liscie!\n";
+                return;
+            }
+        }
+
+        int i = znajdzPuste();
+        if (i != -1) {
+            tabOsob[i].osoba = nowa;
+            tabOsob[i].obecnosc = false;
+            cout << "Dodano do listy: " << nazwaListy << "\n";
+        } else {
+            cout << "Lista jest pelna!\n";
+        }
+    }
+
+    void usunZListy(string nazwisko) {
+        for (int i = 0; i < MAX_OSOB; i++) {
+            if (tabOsob[i].osoba != nullptr && tabOsob[i].osoba->getNazwisko() == nazwisko) {
+                tabOsob[i].osoba = nullptr;
+                tabOsob[i].obecnosc = false;
+            }
+        }
+    }
+
+    void drukuj() {
+        cout << "\n--- LISTA: " << nazwaListy << " ---\n";
+        bool ktos_jest = false;
+        for (int i = 0; i < MAX_OSOB; i++) {
+            if (tabOsob[i].osoba != nullptr) {
+                ktos_jest = true;
+                Drukarka::drukuj(*(tabOsob[i].osoba)); 
+                cout << "   -> Obecnosc na liscie: " << (tabOsob[i].obecnosc ? "TAK" : "NIE") << "\n\n";
+            }
+        }
+        if (!ktos_jest) cout << "Lista jest pusta.\n";
+    }
+
+    void zmienObecnosc(string nazwisko, bool stan) {
+        for (int i = 0; i < MAX_OSOB; i++) {
+            if (tabOsob[i].osoba != nullptr && tabOsob[i].osoba->getNazwisko() == nazwisko) {
+                tabOsob[i].obecnosc = stan;
+                cout << "Obecnosc zaktualizowana.\n";
+                return;
+            }
+        }
+        cout << "Nie znaleziono osoby o tym nazwisku na tej liscie.\n";
+    }
+};
+
+class InterfejsUzytkownika {
+private:
+    Osoba* bazaOsob[MAX_OSOB]; 
+    ListaObecnosci tablicaList[MAX_LIST];
+
+    int znajdzWolneWBazie() {
+        for (int i = 0; i < MAX_OSOB; i++) {
+            if (bazaOsob[i] == nullptr) return i;
+        }
+        return -1;
+    }
+
+    int znajdzOsobeIndex(string nazwisko) {
+        for (int i = 0; i < MAX_OSOB; i++) {
+            if (bazaOsob[i] != nullptr && bazaOsob[i]->getNazwisko() == nazwisko) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+public:
+    InterfejsUzytkownika() {
+        for(int i = 0; i < MAX_OSOB; i++) {
+            bazaOsob[i] = nullptr;
+        }
+        tablicaList[0].setNazwa("Wyklad 1");
+        tablicaList[1].setNazwa("Cwiczenia");
+    }
+
+    ~InterfejsUzytkownika() {
+        for(int i = 0; i < MAX_OSOB; i++) {
+            if (bazaOsob[i] != nullptr) {
+                delete bazaOsob[i];
+            }
+        }
+    }
+
+    void utworzOsobe() {
+        int i = znajdzWolneWBazie();
+        if (i == -1) {
+            cout << "Baza osob jest pelna!\n";
+            return;
+        }
+
+        int typ;
+        cout << "Wybierz typ (1-Zwykla osoba, 2-Student, 3-Student Zaoczny, 4-Prowadzacy): ";
+        cin >> typ;
+
+        switch(typ) {
+            case 1: bazaOsob[i] = new Osoba(); break;
+            case 2: bazaOsob[i] = new Student(); break;
+            case 3: bazaOsob[i] = new StudentZaoczny(); break;
+            case 4: bazaOsob[i] = new Prowadzacy(); break;
+            default:
+                cout << "Nieznany typ, tworze zwykla osobe.\n";
+                bazaOsob[i] = new Osoba();
+                break;
+        }
+        
+        bazaOsob[i]->ustaw();
+        cout << "Utworzono osobe w bazie.\n";
+    }
+
+    void przypiszDoListy() {
+        string nazwisko;
+        int nrListy;
+        cout << "Podaj nazwisko osoby z bazy: "; cin >> nazwisko;
+        
+        int idOsoby = znajdzOsobeIndex(nazwisko);
+        if (idOsoby == -1) {
+            cout << "Nie ma takiej osoby w bazie.\n";
+            return;
+        }
+
+        cout << "Do ktorej listy dodac?\n";
+        for (int l = 0; l < MAX_LIST; l++) {
+            cout << l << ". " << tablicaList[l].getNazwa() << "\n";
+        }
+        cout << "Wybor: "; cin >> nrListy;
+
+        if (nrListy >= 0 && nrListy < MAX_LIST) {
+            tablicaList[nrListy].dodajDoListy(bazaOsob[idOsoby]);
+        } else {
+            cout << "Zly numer listy.\n";
+        }
+    }
+
+    void edytujOsobe() {
+        string nazwisko;
+        cout << "Podaj nazwisko osoby do edycji: "; cin >> nazwisko;
+        int id = znajdzOsobeIndex(nazwisko);
+        
+        if (id != -1) {
+            bazaOsob[id]->edytuj();
+            cout << "Zaktualizowano dane.\n";
+        } else {
+            cout << "Nie znaleziono takiego nazwiska!\n";
+        }
+    }
+
+    void usunOsobe() {
+        string nazwisko;
+        cout << "Podaj nazwisko osoby do usuniecia z bazy: "; cin >> nazwisko;
+        int id = znajdzOsobeIndex(nazwisko);
+
+        if (id != -1) {
+            for(int l = 0; l < MAX_LIST; l++) {
+                tablicaList[l].usunZListy(nazwisko);
+            }
+            delete bazaOsob[id];
+            bazaOsob[id] = nullptr;
+            cout << "Osoba usunieta.\n";
+        } else {
+            cout << "Nie ma kogo usunac, brak nazwiska w bazie.\n";
+        }
+    }
+
+    void menu() {
+        int wybor;
+        while (true) {
+            cout << "\n=== SYSTEM OBECNOSCI ===\n";
+            cout << "1. Utworz nowa osobe w bazie\n";
+            cout << "2. Dodaj osobe z bazy do listy\n";
+            cout << "3. Ustaw obecnosc na liscie\n";
+            cout << "4. Wyswietl liste\n";
+            cout << "5. Edytuj dane osoby\n";
+            cout << "6. Usun osobe z bazy\n";
+            cout << "7. Wczytaj zestaw testowy\n";
+            cout << "0. Wyjscie\n";
+            cout << "Wybor: "; cin >> wybor;
+
+            switch (wybor) {
+                case 1: utworzOsobe(); break;
+                case 2: przypiszDoListy(); break;
+                case 3: {
+                    string naz; bool ob; int nr;
+                    for (int l = 0; l < MAX_LIST; l++) {
+                        cout << l << ". " << tablicaList[l].getNazwa() << "\n";
+                    }
+                    cout << "Nr listy: "; cin >> nr;
+                    if (nr >= 0 && nr < MAX_LIST) {
+                        cout << "Nazwisko: "; cin >> naz;
+                        cout << "Obecny (1/0): "; cin >> ob;
+                        tablicaList[nr].zmienObecnosc(naz, ob);
+                    } else {
+                        cout << "Zly numer listy.\n";
+                    }
+                    break;
+                }
+                case 4: {
+                    int nr;
+                    for (int l = 0; l < MAX_LIST; l++) {
+                        cout << l << ". " << tablicaList[l].getNazwa() << "\n";
+                    }
+                    cout << "Ktora liste wyswietlic: "; cin >> nr;
+                    if (nr >= 0 && nr < MAX_LIST) {
+                        tablicaList[nr].drukuj();
+                    } else {
+                        cout << "Zly numer listy.\n";
+                    }
+                    break;
+                }
+                case 5: edytujOsobe(); break;
+                case 6: usunOsobe(); break;
+                case 7: {
+                    if (znajdzWolneWBazie() != -1) bazaOsob[znajdzWolneWBazie()] = new Osoba(1, "Jan", "Kowalski", "01.01.2000", 182.5f);
+                    if (znajdzWolneWBazie() != -1) bazaOsob[znajdzWolneWBazie()] = new Student(2, "Anna", "Nowak", "Informatyka", 3, "15.05.2001", 165.0f);
+                    if (znajdzWolneWBazie() != -1) bazaOsob[znajdzWolneWBazie()] = new Prowadzacy(3, "Piotr", "Wisniewski", "Dr", "Programowanie", "10.10.1980", 178.0f);
+                    if (znajdzWolneWBazie() != -1) bazaOsob[znajdzWolneWBazie()] = new StudentZaoczny(4, "Michal", "Zalewski", "Zarzadzanie", 5, "20.12.1999", 190.0f);
+                    cout << "Wczytano zestaw testowy.\n";
+                    break;
+                }
+                case 0: return;
+                default: cout << "Zly wybor!\n";
+            }
+        }
+    }
+};
+
+int main() {
+    InterfejsUzytkownika ui;
+    ui.menu();
+    return 0;
+}
